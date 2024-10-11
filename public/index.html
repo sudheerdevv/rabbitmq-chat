@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <title>Multi-Room Chat</title>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+      }
+      #room-select {
+        margin-bottom: 10px;
+      }
+      #chat {
+        display: none;
+        height: 100vh;
+        width: 80%;
+        max-width: 600px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        background: white;
+        box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+      }
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        height: 80%;
+        overflow: scroll;
+        background: #d9d9d9;
+        border-radius: 10px;
+      }
+
+      #messages::-webkit-scrollbar {
+        display: none;
+      }
+
+      #messages li {
+        padding: 8px;
+        border-bottom: 1px solid #ccc;
+      }
+
+      #form {
+        width: 100%;
+        display: flex;
+        margin-top: 10px;
+      }
+      #input {
+        flex: 1;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+      }
+
+      #submit {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #000000;
+        border-radius: 5px;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      #room-input {
+        border: none;
+        padding: 10px 10px;
+        border-radius: 5px;
+        background-color: #d7d7d7;
+      }
+
+      #join-room {
+        border: none;
+        padding: 10px 2ch;
+        background: black;
+        border-radius: 5px;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="room-select">
+      <input id="room-input" placeholder="Enter room name" />
+      <button id="join-room">Join Room</button>
+    </div>
+    <div id="chat">
+      <h3 id="room-name">Room name:</h3>
+      <ul id="messages"></ul>
+      <form id="form" action="">
+        <input id="input" autocomplete="off" /><button id="submit">Send</button>
+      </form>
+    </div>
+
+    <script
+      src="https://cdn.socket.io/4.4.0/socket.io.min.js"
+      integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const socket = io("YOUR_SOCKETIO_URL_DEPLOYED_IN_AWS");
+
+      const roomSelect = document.getElementById("room-select");
+      const roomInput = document.getElementById("room-input");
+      const joinRoomButton = document.getElementById("join-room");
+      const chat = document.getElementById("chat");
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
+      const roomName = document.getElementById("room-name");
+
+      let currentRoom = null;
+
+      joinRoomButton.addEventListener("click", function () {
+        const room = roomInput.value.trim();
+        roomName.textContent += " " + room;
+        if (room) {
+          currentRoom = room;
+          socket.emit("join room", room);
+          roomSelect.style.display = "none";
+          chat.style.display = "block";
+        }
+      });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (input.value && currentRoom) {
+          socket.emit("chat message", {
+            room: currentRoom,
+            message: input.value,
+          });
+          input.value = "";
+        }
+      });
+
+      socket.on("chat message", function (msg) {
+        const item = document.createElement("li");
+        item.textContent = msg;
+        messages.appendChild(item);
+        messages.scrollTo(0, messages.scrollHeight);
+      });
+    </script>
+  </body>
+</html>
